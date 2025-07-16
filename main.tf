@@ -38,8 +38,14 @@ resource "aws_security_group" "demo-tf-sg" {
 resource "aws_instance" "my-demo-ec2-instance" {
   key_name               = aws_key_pair.my_demo_key.key_name
   vpc_security_group_ids = [aws_security_group.demo-tf-sg.id]
-  instance_type          = var.ec2_instance_type
+  instance_type          = each.value
   ami                    = var.ec2_ami
+  user_data              = file("install_nginx.sh")
+
+  for_each = tomap({
+    Demo-EC2-micro  = "t2.micro",
+    Demo-EC2-medium = "t2.medium"
+  })
   root_block_device {
     volume_size           = var.ec2_root_volume_size
     volume_type           = "gp3"
@@ -47,7 +53,7 @@ resource "aws_instance" "my-demo-ec2-instance" {
   }
   tags = {
     environment = "testing"
-    Name        = "demo-ec2-from-tf"
+    Name        = each.key
   }
 
 
